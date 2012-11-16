@@ -1,14 +1,13 @@
-## Producer.pm
-##
-## Author:  Robert W. Leach
-## Date:    3/7/2003
-## Company: Los Alamos National Laboratory
-
 package IO::Pipe::Producer;
-use base qw(IO::Pipe);
-use Carp;
 
-$Producer::VERSION = '1.5';
+use 5.012003;
+use strict;
+use warnings;
+
+our @ISA = qw(IO::Pipe);
+use base qw(IO::Pipe);
+
+our $VERSION = '1.6';
 
 #NOTICE
 #
@@ -30,7 +29,6 @@ $Producer::VERSION = '1.5';
 #If SOFTWARE is modified to produce derivative works, such modified SOFTWARE
 #should be clearly marked, so as not to confuse it with the version available
 #from LANL.
-
 
 
 #Constructor
@@ -171,88 +169,90 @@ sub getSystemProducer
   }
 
 
+1;
+__END__
 
 =head1 NAME
 
-IO::Pipe::Producer
-
-=head1 AUTHOR
-
-IO::Pipe::Producer was written by Robert W. Leach I<E<lt>robleach@lanl.govE<gt>> in 2005.
+IO::Pipe::Producer - Perl extension for IO::Pipe
 
 =head1 SYNOPSIS
  
- # Module which provides 2 methods: getSubroutineProducer
- # and getSystemProducer.  They take a subroutine reference
- # (with associated arguments) and a system call
- # respectively and return (blessed) handles on their
- # streaming standard output and standard error output.
+  #Example 1 (Calling a subroutine and grabbing its standard output):
  
+  use IO::Pipe::Producer;
+  $obj = new IO::Pipe::Producer();
+  $stdout_file_handle =
+    $obj->getSubroutineProducer(\&mysub,
+                                @mysub_params);
+  while(<$stdout_file_handle>)
+    {print}
  
- # EXAMPLES of usage
+  #Example 2 (Calling a subroutine and grabbing both its standard output and
+  #           standard error):
  
- use IO::Pipe::Producer;
- $obj = new IO::Pipe::Producer();
- $stdout_fh =
-   $obj->getSubroutineProducer($subroutine_reference,
-                               @subroutine_parameters);
+  ($stdout_file_handle,$stderr_file_handle) =
+    $obj->getSubroutineProducer(\&mysub,
+                                @mysub_params);
+  #Note, reading all of 1 handle and then the other could lead to blocking
+  #hangs, so it is recommended to use IO::Select when reading more than 1 file
+  #handle:
+  use IO::Select;
+  my $sel = new IO::Select;
+  $sel->add($stdout_file_handle,$stderr_file_handle);
+  while(my @fhs = $sel->can_read())
+    {
+      foreach my $fh (@fhs)
+        {
+          my $line = <$fh>;
+          unless(defined($line))
+            {
+              $sel->remove($fh);
+              next;
+            }
+          if($fh == $stdout_file_handle)
+            {$messages .= $line}
+          elsif($fh == $stderr)
+            {$errors .= $line}
+        }
+     }
  
- # OR
+  #Example 3 (You can also get subroutine producers from the constructor):
+
+  use IO::Pipe::Producer;
+  $stdout_fh = new IO::Pipe::Producer(\&mysub,
+                                      @mysub_params);
  
- use IO::Pipe::Producer;
- $obj = new IO::Pipe::Producer();
- ($stdout_fh,$stderr_fh) =
-   $obj->getSubroutineProducer($subroutine_reference,
-                               @subroutine_parameters);
+  #OR
  
- # OR
+  use IO::Pipe::Producer;
+  ($stdout_fh,$stderr_fh) =
+   new IO::Pipe::Producer(\&mysub,
+                          @mysub_params);
  
- use IO::Pipe::Producer;
- $stdout_fh = new IO::Pipe::Producer($subroutine_reference,
- 				    @subroutine_parameters);
+  #Example 4 (You can also get system-call producers using any of these
+  #           methods):
  
- # OR
+  use IO::Pipe::Producer;
+  $obj = new IO::Pipe::Producer();
+  $stdout_fh =
+    $obj->getSystemProducer("echo \"Hello World!\"");
  
- use IO::Pipe::Producer;
- ($stdout_fh,$stderr_fh) =
-   new IO::Pipe::Producer($subroutine_reference,
-                          @subroutine_parameters);
+  use IO::Pipe::Producer;
+  $obj = new IO::Pipe::Producer();
+  ($stdout_fh,$stderr_fh) =
+    $obj->getSystemProducer("echo \"Hello World!\"");
  
- # Then you can read the returned handles like any other
- # file handle...
+  use IO::Pipe::Producer;
+  $stdout_fh = new IO::Pipe::Producer(sub{system(@_)},
+                                      "echo \"Hello World!\"");
  
- while(<$stdout_fh>)
-   {print "STDOUT From Producer: $_"}
- while(<$stderr_fh>)
-   {print "STDERR From Producer: $_"}
- 
- # You can also do the same thing with system calls using
- # the getSystemProducer subroutine.  However, this feature
- # is not accessible via the new constructor
- 
- use IO::Pipe::Producer;
- $obj = new IO::Pipe::Producer();
- $stdout_fh =
-   $obj->getSystemProducer("echo \"Hello World!\"");
- 
- use IO::Pipe::Producer;
- $obj = new IO::Pipe::Producer();
- ($stdout_fh,$stderr_fh) =
-   $obj->getSystemProducer("echo \"Hello World!\"");
- 
- # However, this is exactly the same as:
- 
- use IO::Pipe::Producer;
- $stdout_fh = new Producer(sub{system(@_)},
-			   "echo \"Hello World!\"");
- 
- # OR
- 
- use IO::Pipe::Producer;
- ($stdout_fh,$stderr_fh) =
-   new IO::Pipe::Producer(sub{system(@_)},
-			  "echo \"Hello World!\"");
- 
+  use IO::Pipe::Producer;
+  ($stdout_fh,$stderr_fh) =
+    new IO::Pipe::Producer(sub{system(@_)},
+                           "echo \"Hello World!\"");
+
+
 =head1 ABSTRACT
 
 Producer.pm is useful for piggy-backing large data processing subroutines or system calls.  Instead of making each call serially and waiting for a return or playing with temporary files, you can create a Producer that will continuosly generate output that can be further processed right away in your script.  One benefit is immediate feedback.  It's basically a way to pipe the standard output of a forked subroutine or system call to a file handle in your parent process.
@@ -265,7 +265,20 @@ Producer.pm is a module that provides methods to fork off a subroutine or system
 
 This module was originally written as a simple subrotuine in a library that simply used IO::Pipe.  I decided to make it into a subclass of IO::Pipe even though it only really adds one method and a helper method (Note: The getSystemProducer method calls getSubroutineProducer) because libraries seem antiquated to me.  I'm open to better design suggestions however.  I also decided to bless the returns of all the methods because they were retuning IO::Pipe objects anyway.  The basic trick this module uses can be gleaned from the IO::Pipe documentation if you read between the lines and combine various tidbits from different sections, but to simplify it, it simply "opens" the file handle inside the IO::Pipe data structure to accept output from the output file handles (STDOUT/STDERR) as input, which is the basic definition of a pipe.
 
-=head1 NOTICE
+=head1 BUGS
+
+No known bugs.  Please report them to I<E<lt>robleach@buffalo.eduE<gt>> if you find any.
+
+=head1 SEE ALSO
+
+L<IO::Pipe>
+L<IO::Select>
+
+=head1 AUTHOR
+
+Robert William Leach, E<lt>rwleach@buffalo.eduE<gt>
+
+=head1 COPYRIGHT AND LICENSE
 
 This software and ancillary information (herein called "SOFTWARE") called Producer.pm is made available under the terms described here.  The SOFTWARE has been approved for release with associated LA-CC number LA-CC-05-060.
 
@@ -273,16 +286,5 @@ Unless otherwise indicated, this software has been authored by an employee or em
 
 If SOFTWARE is modified to produce derivative works, such modified SOFTWARE should be clearly marked, so as not to confuse it with the version available from LANL.
 
-=head1 BUGS
-
-No known bugs.  Please report them to I<E<lt>robleach@lanl.govE<gt>> if you find any.
-
-=head1 SEE ALSO
-
-L<IO::Pipe>
 
 =cut
-
-
-
-1;

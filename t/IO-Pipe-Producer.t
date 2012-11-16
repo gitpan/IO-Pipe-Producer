@@ -1,9 +1,22 @@
-#!/usr/bin/perl
+# Before `make install' is performed this script should be runnable with
+# `make test'. After `make install' it should work as `perl IO-Pipe-Producer.t'
+
+#########################
+
+use strict;
+use warnings;
+
+use Test::More tests => 7;
+BEGIN { use_ok('IO::Pipe::Producer') };
+
+#########################
+
+# Insert your test code below, the Test::More module is use()ed here so read
+# its man page ( perldoc Test::More ) for help writing this test script.
 
 use strict;
 
 #Print the number of tests in a format that Module::Build understands
-print("1..6\n");
 
 #Initialize vars needed by IO::Pipe::Producer
 my $subroutine_reference = \&test;
@@ -25,13 +38,8 @@ my $stdout_fh =
   $obj->getSubroutineProducer($subroutine_reference,@subroutine_parameters);
 my @output = map {chomp;$_} <$stdout_fh>;
 
-if(equaleq(\@subroutine_parameters,\@output))
-  {print("ok 1\n")}
-else
-  {
-    $num_failed++;
-    print("not ok 1\n");
-  }
+ok(equaleq(\@subroutine_parameters,\@output),
+   'getSubroutineProducer() works in scalar context');
 
 ##
 ## Test 2
@@ -45,14 +53,9 @@ my($stderr_fh);
 @output          = map {chomp;$_} <$stdout_fh>;
 my @error_output = map {chomp;$_} <$stderr_fh>;
 
-if(equaleq(\@subroutine_parameters,\@output) &&
-   equaleq(\@subroutine_parameters,\@error_output))
-  {print("ok 2\n")}
-else
-  {
-    $num_failed++;
-    print("not ok 2\n");
-  }
+ok(equaleq(\@subroutine_parameters,\@output) &&
+   equaleq(\@subroutine_parameters,\@error_output),
+   'getSubroutineProducer() works in list context');
 
 ##
 ## Test 3
@@ -63,13 +66,8 @@ $stdout_fh = new IO::Pipe::Producer($subroutine_reference,
 				    @subroutine_parameters);
 @output = map {chomp;$_} <$stdout_fh>;
 
-if(equaleq(\@subroutine_parameters,\@output))
-  {print("ok 3\n")}
-else
-  {
-    $num_failed++;
-    print("not ok 3\n");
-  }
+ok(equaleq(\@subroutine_parameters,\@output),
+   'new() works in scalar context');
 
 ##
 ## Test 4
@@ -81,14 +79,9 @@ else
 @output       = map {chomp;$_} <$stdout_fh>;
 @error_output = map {chomp;$_} <$stderr_fh>;
 
-if(equaleq(\@subroutine_parameters,\@output) &&
-   equaleq(\@subroutine_parameters,\@error_output))
-  {print("ok 4\n")}
-else
-  {
-    $num_failed++;
-    print("not ok 4\n");
-  }
+ok(equaleq(\@subroutine_parameters,\@output) &&
+   equaleq(\@subroutine_parameters,\@error_output),
+   'new() works in list context');
 
 ##
 ## Test 5
@@ -99,14 +92,8 @@ $obj = new IO::Pipe::Producer();
 $stdout_fh = $obj->getSystemProducer("echo \"Hello World!\"");
 @output = map {chomp;$_} <$stdout_fh>;
 
-if("Hello World!" eq $output[0])
-  {print("ok 5\n")}
-else
-  {
-    print STDERR ("[@output] ne [Hello World!]\n");
-    $num_failed++;
-    print("not ok 5\n");
-  }
+ok("Hello World!" eq $output[0],
+   'getSystemProducer() works in scalar context');
 
 ##
 ## Test 6
@@ -122,22 +109,9 @@ $obj = new IO::Pipe::Producer();
 @output       = map {chomp;$_} <$stdout_fh>;
 @error_output = map {chomp;$_} <$stderr_fh>;
 
-if("Hello World!" eq $output[0] &&
-   equaleq(\@subroutine_parameters,\@error_output))
-  {print("ok 6\n")}
-else
-  {
-    print STDERR (('Hello World!' ne $output[0] ?
-		   "[@output] ne [Hello World!] in STDOUT" : ''),
-		  (equaleq(\@subroutine_parameters,\@error_output) ?
-		   '':"[@error_output] ne [@subroutine_parameters] in STDERR"),
-		  "\n");
-    $num_failed++;
-    print("not ok 6\n");
-  }
-
-#Exit with the number of failed tests
-exit($num_failed);
+ok("Hello World!" eq $output[0] &&
+   equaleq(\@subroutine_parameters,\@error_output),
+   'getSystemProducer() works in list context');
 
 
 

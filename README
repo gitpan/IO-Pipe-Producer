@@ -1,6 +1,9 @@
+IO-Pipe-Producer version 0.01
+=============================
+
 
                                  Producer.pm
-                             Version 1.4 (and up)
+                                 Version 1.6
 
   What is it?
   -----------
@@ -20,90 +23,39 @@
   with this module, you can get a handle on STDERR and use it with subroutines
   as well.
 
-  Documentation
-  -------------
+INSTALLATION
 
-  After installation, run `perldoc IO::Pipe::Producer` on the command line.
+To install this module type the following:
 
-  Installation
-  ------------
+   perl Makefile.PL
+   make
+   make test
+   make install
 
-  gzip -d IO-Pipe-Producer-1.4.tar.gz
-  tar -xvf IO-Pipe-Producer-1.4.tar
-  cd IO-Pipe-Producer-1.4
-  perl Build.PL
-  ./Build
-  ./Build test
-  ./Build install
+DEPENDENCIES
 
-  OR:
+This module requires these other modules and libraries:
 
-  Locate where your Pipe.pm module is (by searching the @INC directories).
-    Note: It should be in .../IO/. 
-  cd to that directory.
-  Create a directory called 'Pipe'.
-  Copy ./lib/IO/Pipe/Producer.pm to the Pipe directory you created.
+  IO::Pipe
 
-  Change History
-  --------------
+COPYRIGHT AND LICENCE
 
-  2003/03/07 robleach 1.0
+This software and ancillary information (herein called "SOFTWARE") called
+Producer.pm is made available under the terms described here.  The
+SOFTWARE has been approved for release with associated LA-CC number
+LA-CC-05-060.
 
-    Initial version.
+Unless otherwise indicated, this software has been authored by an employee or
+employees of the University of California, operator of the Los Alamos National
+Laboratory under Contract No. W-7405-ENG-36 with the U.S. Department of
+Energy.  The U.S. government has rights to use, reproduce, and distribute this
+SOFTWARE.  The public may copy, distribute, prepare derivative works and
+publicly display this SOFTWARE without charge, provided that this notice and
+any statement of authorship are reproduced on all copies.  Neither the
+government nor the university makes any warranty, express or implied, or
+assumes any liability or responsibility for the use of this SOFTWARE.
 
-  2005/04/11 robleach 1.1
+If SOFTWARE is modified to produce derivative works, such modified SOFTWARE
+should be clearly marked, so as not to confuse it with the version available
+from LANL.
 
-    I added the ability to return handles on both standard output and standard
-    error (when called in array context).  I also added a subroutine to do the
-    same thing with a system call (as opposed to a subroutine call).
-
-  2005/04/11 robleach 1.2
-
-    I added the ability to return handles on both standard output and standard
-    error (when called in array context).  I also added a subroutine to do the
-    same thing with a system call (as opposed to a subroutine call).
-
-  2005/04/11 robleach 1.3
-
-    This is a modular version of producer_fork.pl.  I changed the method names,
-    made a constructor, and changed the documentation.  It now ISA IO::Pipe and
-    all the file handles returned are IO::Pipe::Producer instances.
-
-  2005/05/04 robleach 1.4
-
-    I incorporated Carp.pm, pod documentation, created $Producer::VERSION and
-    $Producer::errstr variables, and edited/updated some comments.
-
-  Licensing
-  ---------
-
-  This software and ancillary information (herein called "SOFTWARE") called
-  Producer.pm is made available under the terms described here.  The
-  SOFTWARE has been approved for release with associated LA-CC number
-  LA-CC-05-060.
-
-  Unless otherwise indicated, this software has been authored by an employee or
-  employees of the University of California, operator of the Los Alamos
-  National Laboratory under Contract No. W-7405-ENG-36 with the U.S. Department
-  of Energy.  The U.S. government has rights to use, reproduce, and distribute
-  this SOFTWARE.  The public may copy, distribute, prepare derivative works and
-  publicly display this SOFTWARE without charge, provided that this notice and
-  any statement of authorship are reproduced on all copies.  Neither the
-  government nor the university makes any warranty, express or implied, or
-  assumes any liability or responsibility for the use of this SOFTWARE.
-
-  If SOFTWARE is modified to produce derivative works, such modified SOFTWARE
-  should be clearly marked, so as not to confuse it with the version available
-  from LANL.
-
-
-  Author
-  ------
-
-  Robert W. Leach
-  robleach@lanl.gov
-  Los Alamos National Laboratory
-  Bioscience Division, B5 (Genome Sequencing and Computational Biology)
-  Biodefense Team
-  MS M888
-  Los Alamos, NM 87545
