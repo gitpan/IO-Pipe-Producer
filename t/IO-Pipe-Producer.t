@@ -6,7 +6,13 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
+
+##
+## Test 1
+##
+
+#Test to make sure we can 'use' the module
 BEGIN { use_ok('IO::Pipe::Producer') };
 
 #########################
@@ -19,84 +25,89 @@ use strict;
 #Print the number of tests in a format that Module::Build understands
 
 #Initialize vars needed by IO::Pipe::Producer
-my $subroutine_reference = \&test;
+my $subroutine1_reference = \&test1;
+my $subroutine2_reference = \&test2;
 my @subroutine_parameters = ('testing',1,2,3);
-
-#Keep track of how many tests failed
-my $num_failed = 0;
 
 #use the module I want to test
 use IO::Pipe::Producer;
 
 ##
-## Test 1
+## Test 2
 ##
 
 #Test a scalar context call to getSubroutineProducer
 my $obj = new IO::Pipe::Producer();
 my $stdout_fh =
-  $obj->getSubroutineProducer($subroutine_reference,@subroutine_parameters);
+  $obj->getSubroutineProducer($subroutine1_reference,@subroutine_parameters);
 my @output = map {chomp;$_} <$stdout_fh>;
+close($stdout_fh);
 
 ok(equaleq(\@subroutine_parameters,\@output),
-   'getSubroutineProducer() works in scalar context');
+   'getSubroutineProducer() in scalar context');
 
 ##
-## Test 2
+## Test 3
 ##
 
 #Test a list context call to getSubroutineProducer
 $obj = new IO::Pipe::Producer();
 my($stderr_fh);
 ($stdout_fh,$stderr_fh) =
-  $obj->getSubroutineProducer($subroutine_reference,@subroutine_parameters);
+  $obj->getSubroutineProducer($subroutine2_reference,@subroutine_parameters);
 @output          = map {chomp;$_} <$stdout_fh>;
 my @error_output = map {chomp;$_} <$stderr_fh>;
+close($stdout_fh);
+close($stderr_fh);
 
 ok(equaleq(\@subroutine_parameters,\@output) &&
    equaleq(\@subroutine_parameters,\@error_output),
-   'getSubroutineProducer() works in list context');
-
-##
-## Test 3
-##
-
-#Test a scalar context call to new that returns an STDOUT handle
-$stdout_fh = new IO::Pipe::Producer($subroutine_reference,
-				    @subroutine_parameters);
-@output = map {chomp;$_} <$stdout_fh>;
-
-ok(equaleq(\@subroutine_parameters,\@output),
-   'new() works in scalar context');
+   'getSubroutineProducer() in list context');
 
 ##
 ## Test 4
 ##
 
-#Test a list context call to new that returns STDOUT & STDERR handles
-($stdout_fh,$stderr_fh) =
-  new IO::Pipe::Producer($subroutine_reference,@subroutine_parameters);
-@output       = map {chomp;$_} <$stdout_fh>;
-@error_output = map {chomp;$_} <$stderr_fh>;
+#Test a scalar context call to new that returns an STDOUT handle
+$stdout_fh = new IO::Pipe::Producer($subroutine1_reference,
+				    @subroutine_parameters);
+@output = map {chomp;$_} <$stdout_fh>;
+close($stdout_fh);
 
-ok(equaleq(\@subroutine_parameters,\@output) &&
-   equaleq(\@subroutine_parameters,\@error_output),
-   'new() works in list context');
+ok(equaleq(\@subroutine_parameters,\@output),
+   'new() in scalar context');
 
 ##
 ## Test 5
+##
+
+#Test a list context call to new that returns STDOUT & STDERR handles
+($stdout_fh,$stderr_fh) =
+  new IO::Pipe::Producer($subroutine2_reference,@subroutine_parameters);
+@output       = map {chomp;$_} <$stdout_fh>;
+@error_output = map {chomp;$_} <$stderr_fh>;
+close($stdout_fh);
+close($stderr_fh);
+
+ok(equaleq(\@subroutine_parameters,\@output) &&
+   equaleq(\@subroutine_parameters,\@error_output),
+   'new() in list context');
+
+##
+## Test 6
 ##
 
 #Test a scalar context call to getSystemProducer
 $obj = new IO::Pipe::Producer();
 $stdout_fh = $obj->getSystemProducer("echo \"Hello World!\"");
 @output = map {chomp;$_} <$stdout_fh>;
+close($stdout_fh);
 
 ok("Hello World!" eq $output[0],
-   'getSystemProducer() works in scalar context');
+   'getSystemProducer() in scalar context');
 
 ##
-## Test 6
+## Test 7
 ##
 
 #Test a list context call to getSystemProducer
@@ -108,16 +119,38 @@ $obj = new IO::Pipe::Producer();
 			  "))'");
 @output       = map {chomp;$_} <$stdout_fh>;
 @error_output = map {chomp;$_} <$stderr_fh>;
+close($stdout_fh);
+close($stderr_fh);
 
 ok("Hello World!" eq $output[0] &&
    equaleq(\@subroutine_parameters,\@error_output),
-   'getSystemProducer() works in list context');
+   'getSystemProducer() in list context');
+
+##
+## Test 8
+##
+
+#Test that closing expired handles when exceed max works
+$obj = new IO::Pipe::Producer();
+foreach(1..202)
+  {
+    $stdout_fh =
+      $obj->getSubroutineProducer($subroutine1_reference,
+                                  @subroutine_parameters);
+    my @output = map {chomp;$_} <$stdout_fh>;
+  }
+close($stdout_fh);
+
+ok(scalar(@{$IO::Pipe::Producer::handle_buffer}) == 1,
+   'getSubroutineProducer() with too many unclosed/expired file handles');
 
 
 
-#Subroutine that will be sent to the method calls in IO::Pipe::Producer
-#It simply prints the parameters sent in separated by new lines
-sub test
+#Subroutines that will be sent to the method calls in IO::Pipe::Producer
+#They simply print the parameters sent in separated by new lines
+sub test1
+  {print(join("\n",@_))}
+sub test2
   {
     print(join("\n",@_));
     print STDERR (join("\n",@_));
