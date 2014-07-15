@@ -132,14 +132,19 @@ ok("Hello World!" eq $output[0] &&
 
 #Test that closing expired handles when exceed max works
 $obj = new IO::Pipe::Producer();
-foreach(1..202)
+foreach(1..102)
   {
     $stdout_fh =
       $obj->getSubroutineProducer($subroutine1_reference,
                                   @subroutine_parameters);
+    unless(defined($stdout_fh))
+      {
+        print STDERR "Fork unsuccessful on iteration: [$_]!";
+        next;
+      }
     my @output = map {chomp;$_} <$stdout_fh>;
   }
-close($stdout_fh);
+close($stdout_fh) if(defined($stdout_fh));
 
 ok(scalar(@{$IO::Pipe::Producer::handle_buffer}) == 1,
    'getSubroutineProducer() with too many unclosed/expired file handles');

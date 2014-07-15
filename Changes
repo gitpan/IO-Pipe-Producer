@@ -37,4 +37,14 @@ Revision history for Perl extension IO::Pipe::Producer.
     Created by h2xs 1.23 with options
         -AX --skip-exporter --use-new-tests -n IO::Pipe::Producer
 
+1.7  2014/07/11 by robleach
 
+    Changed documentation to inform user that they must close the returned file
+    handles and added a check for finished unclosed file handles.  Closes them
+    if there are over 200.
+
+1.8  2014/05/15 by robleach
+
+    Based on test results, I reduced the maximum number of allowed unclosed
+    file handles to 100, as it seemed the most any system tested could handle
+    was 110.

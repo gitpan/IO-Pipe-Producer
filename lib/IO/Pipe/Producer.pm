@@ -8,10 +8,10 @@ use Carp;
 our @ISA = qw(IO::Pipe);
 use base qw(IO::Pipe);
 
-our $VERSION = '1.7';
+our $VERSION = '1.8';
 
 our $handle_buffer       = [];   #For tracking unclosed handles
-our $max_expired_handles = 200;
+our $max_expired_handles = 100;
 
 #NOTICE
 #
