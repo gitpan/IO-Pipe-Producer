@@ -8,7 +8,7 @@ use Carp;
 our @ISA = qw(IO::Pipe);
 use base qw(IO::Pipe);
 
-our $VERSION = '1.8';
+our $VERSION = '1.9';
 
 our $handle_buffer       = [];   #For tracking unclosed handles
 our $max_expired_handles = 100;
@@ -109,8 +109,9 @@ sub getSubroutineProducer
 	    $stderr_pipe->reader() if(wantarray);
 
 	    #If expired open file handles are building up
-	    my @expired = grep {defined(fileno($_)) && eof($_)}
-	      @{$IO::Pipe::Producer::handle_buffer};
+	    my @expired =
+	      grep {defined(fileno($_)) && tell($_) == -1 && eof($_)}
+		@{$IO::Pipe::Producer::handle_buffer};
 	    if(scalar(@expired) > $IO::Pipe::Producer::max_expired_handles)
 	      {
 		$error = "WARNING:Producer.pm:getSubroutineProducer:Expired " .

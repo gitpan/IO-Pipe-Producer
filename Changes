@@ -43,8 +43,13 @@ Revision history for Perl extension IO::Pipe::Producer.
     handles and added a check for finished unclosed file handles.  Closes them
     if there are over 200.
 
-1.8  2014/05/15 by robleach
+1.8  2014/07/15 by robleach
 
     Based on test results, I reduced the maximum number of allowed unclosed
     file handles to 100, as it seemed the most any system tested could handle
     was 110.
+
+1.9  2014/07/18 by robleach
+
+    Added a call to tell before calling eof when checking for expired file
+    handles so as to avoid blocking IO situations.
