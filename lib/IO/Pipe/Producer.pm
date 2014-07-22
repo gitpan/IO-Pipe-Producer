@@ -8,10 +8,7 @@ use Carp;
 our @ISA = qw(IO::Pipe);
 use base qw(IO::Pipe);
 
-our $VERSION = '1.9';
-
-our $handle_buffer       = [];   #For tracking unclosed handles
-our $max_expired_handles = 100;
+our $VERSION = '1.10';
 
 #NOTICE
 #
@@ -107,30 +104,6 @@ sub getSubroutineProducer
 	    #Create a read file handle
 	    $stdout_pipe->reader();
 	    $stderr_pipe->reader() if(wantarray);
-
-	    #If expired open file handles are building up
-	    my @expired =
-	      grep {defined(fileno($_)) && tell($_) == -1 && eof($_)}
-		@{$IO::Pipe::Producer::handle_buffer};
-	    if(scalar(@expired) > $IO::Pipe::Producer::max_expired_handles)
-	      {
-		$error = "WARNING:Producer.pm:getSubroutineProducer:Expired " .
-		  "file handles have exceeded the max allowed: " .
-		    "[$IO::Pipe::Producer::max_expired_handles].  Cleaning " .
-		      "them up.  Please make sure your script closes the " .
-			"file handles explicitly.";
-		$Producer::errstr = $error;
-		carp($error);
-
-		close($_) foreach(@expired);
-	      }
-
-	    #Track the file handles
-	    @{$IO::Pipe::Producer::handle_buffer} =
-	      grep {defined(fileno($_))} @{$IO::Pipe::Producer::handle_buffer};
-	    push(@{$IO::Pipe::Producer::handle_buffer},$stdout_pipe);
-	    push(@{$IO::Pipe::Producer::handle_buffer},$stderr_pipe)
-	      if(wantarray);
 
 	    #Return the read file handle to the consumer
 	    if(wantarray)
@@ -256,7 +229,7 @@ IO::Pipe::Producer - Perl extension for IO::Pipe
 
 =head1 ABSTRACT
 
-Producer.pm is useful for chaining large data processing subroutines or system calls.  Instead of making each call serially and waiting for a return, you can create a Producer that will continuosly generate output that can be immediately processed.  You can even split up input and run subroutines in parallel.  Producer.pm is basically a way to pipe the standard output of a forked subroutine or system call to a file handle in your parent process.
+Producer.pm is useful for chaining large data processing subroutines or system calls.  Instead of making each call serially and waiting for a return, you can create a Producer that will continuously generate output that can be immediately processed.  You can even split up input and run subroutines in parallel.  Producer.pm is basically a way to pipe the standard output of a forked subroutine or system call to a file handle in your parent process.
 
 =head1 DESCRIPTION
 
@@ -266,7 +239,7 @@ Note that the handles retuned are open file handles.  It is your job to close th
 
 =head1 NOTES
 
-This module was originally written as a simple subrotuine that used IO::Pipe.  It adds one method and a helper method (Note: The getSystemProducer method calls getSubroutineProducer).  It functions by opening STDOUT/STDERR as input, which is the basic definition of a pipe.  Those input file handles are what is returned.
+This module was originally written as a simple subroutine that used IO::Pipe.  It adds one method and a helper method (Note: The getSystemProducer method calls getSubroutineProducer).  It functions by opening STDOUT/STDERR as input, which is the basic definition of a pipe.  Those input file handles are what is returned.
 
 =head1 BUGS
 
