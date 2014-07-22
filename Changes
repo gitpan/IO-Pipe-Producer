@@ -54,6 +54,6 @@ Revision history for Perl extension IO::Pipe::Producer.
     Added a call to tell before calling eof when checking for expired file
     handles so as to avoid blocking IO situations.
 
-1.10 2014/07/22 by robleach
+2.0  2014/07/22 by robleach
 
     Based on CPAN tester test results, removed file handle tracking.

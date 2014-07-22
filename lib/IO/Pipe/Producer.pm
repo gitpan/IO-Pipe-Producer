@@ -8,7 +8,7 @@ use Carp;
 our @ISA = qw(IO::Pipe);
 use base qw(IO::Pipe);
 
-our $VERSION = '1.10';
+our $VERSION = '2.0';
 
 #NOTICE
 #
